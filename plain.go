@@ -3,8 +3,6 @@ package sasl
 import (
 	"bytes"
 	"errors"
-
-	"github.com/emersion/imap/backend"
 )
 
 type plainClient struct {
@@ -20,7 +18,7 @@ func (a *plainClient) Start() (mech string, ir []byte, err error) {
 }
 
 func (a *plainClient) Next(challenge []byte) (response []byte, err error) {
-	return nil, errors.New("unexpected server challenge")
+	return nil, errors.New("Unexpected server challenge")
 }
 
 // An implementation of the PLAIN authentication mechanism, as described in
@@ -30,10 +28,12 @@ func NewPlainClient(username, password, identity string) Client {
 	return &plainClient{username, password, identity}
 }
 
+// Authenticates users with a username and a password.
+type PlainAuthenticator func(username, password string) error
+
 type plainServer struct {
 	done bool
-	user backend.User
-	backend backend.Backend
+	authenticate PlainAuthenticator
 }
 
 func (a *plainServer) Start() (ir []byte, err error) {
@@ -43,14 +43,14 @@ func (a *plainServer) Start() (ir []byte, err error) {
 
 func (a *plainServer) Next(challenge []byte) (response []byte, err error) {
 	if a.done {
-		err = errors.New("unexpected client challenge")
+		err = errors.New("Unexpected client challenge")
 		return
 	}
 	a.done = true
 
 	parts := bytes.Split(challenge, []byte("\x00"))
 	if len(parts) != 3 {
-		err = errors.New("invalid challenge")
+		err = errors.New("Invalid challenge")
 		return
 	}
 
@@ -64,19 +64,10 @@ func (a *plainServer) Next(challenge []byte) (response []byte, err error) {
 	username := string(parts[1])
 	password := string(parts[2])
 
-	user, err := a.backend.Login(username, password)
-	if err != nil {
-		return
-	}
-
-	a.user = user
+	err = a.authenticate(username, password)
 	return
 }
 
-func (a *plainServer) User() backend.User {
-	return a.user
-}
-
-func NewPlainServer(bkd backend.Backend) Server {
-	return &plainServer{backend: bkd}
+func NewPlainServer(authenticator PlainAuthenticator) Server {
+	return &plainServer{authenticate: authenticator}
 }

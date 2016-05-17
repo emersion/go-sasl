@@ -1,10 +1,6 @@
 // Library for Simple Authentication and Security Layer (SASL).
 package sasl
 
-import (
-	"github.com/emersion/imap/backend"
-)
-
 // Note:
 //   Most of this code was copied, with some modifications, from net/smtp. It
 //   would be better if Go provided a standard package (e.g. crypto/sasl) that
@@ -35,10 +31,4 @@ type Server interface {
 
 	// Continues challenge-response authentication.
 	Next(challenge []byte) (response []byte, err error)
-
-	// Get the authenticated user. Returns nil if no user has been authenticated.
-	User() backend.User
 }
-
-// A function that creates SASL servers.
-type ServerFactory func() Server
