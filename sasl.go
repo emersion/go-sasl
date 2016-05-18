@@ -1,4 +1,4 @@
-// Library for Simple Authentication and Security Layer (SASL).
+// Library for Simple Authentication and Security Layer (SASL) defined in RFC 4422.
 package sasl
 
 // Note:
@@ -26,9 +26,10 @@ type Client interface {
 
 // Server interface to perform challenge-response authentication.
 type Server interface {
-	// Begins SASL authentication with the client.
-	Start() (ir []byte, err error)
-
-	// Continues challenge-response authentication.
-	Next(challenge []byte) (response []byte, err error)
+	// Begins or continues challenge-response authentication. If the client
+	// supplies an initial response, response is non-nil.
+	//
+	// If the authentication is finished, done is set to true. If the
+	// authentication has failed, an error is returned.
+	Next(response []byte) (challenge []byte, done bool, err error)
 }

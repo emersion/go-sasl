@@ -6,9 +6,9 @@ import (
 )
 
 type plainClient struct {
+	Identity string
 	Username string
 	Password string
-	Identity string
 }
 
 func (a *plainClient) Start() (mech string, ir []byte, err error) {
@@ -21,53 +21,54 @@ func (a *plainClient) Next(challenge []byte) (response []byte, err error) {
 	return nil, errors.New("Unexpected server challenge")
 }
 
-// An implementation of the PLAIN authentication mechanism, as described in
-// RFC 4616. Authorization identity may be left blank to indicate that it is the
-// same as the username.
-func NewPlainClient(username, password, identity string) Client {
-	return &plainClient{username, password, identity}
+// A client implementation of the PLAIN authentication mechanism, as described
+// in RFC 4616. Authorization identity may be left blank to indicate that it is
+// the same as the username.
+func NewPlainClient(identity, username, password string) Client {
+	return &plainClient{identity, username, password}
 }
 
-// Authenticates users with a username and a password.
-type PlainAuthenticator func(username, password string) error
+// Authenticates users with an identity, a username and a password. If the
+// identity is left blank, it indicates that it is the same as the username.
+// If identity is not empty and the server doesn't support it, an error must be
+// returned.
+type PlainAuthenticator func(identity, username, password string) error
 
 type plainServer struct {
 	done bool
 	authenticate PlainAuthenticator
 }
 
-func (a *plainServer) Start() (ir []byte, err error) {
-	ir = []byte{}
-	return
-}
-
-func (a *plainServer) Next(challenge []byte) (response []byte, err error) {
+func (a *plainServer) Next(response []byte) (challenge []byte, done bool, err error) {
 	if a.done {
-		err = errors.New("Unexpected client challenge")
+		err = errors.New("Unexpected client response")
 		return
 	}
+
+	// No initial response, send an empty challenge
+	if response == nil {
+		return []byte{}, false, nil
+	}
+
 	a.done = true
 
-	parts := bytes.Split(challenge, []byte("\x00"))
+	parts := bytes.Split(response, []byte("\x00"))
 	if len(parts) != 3 {
-		err = errors.New("Invalid challenge")
+		err = errors.New("Invalid response")
 		return
 	}
 
-	// TODO: support identity
 	identity := string(parts[0])
-	if identity != "" {
-		err = errors.New("SASL identity is not supported")
-		return
-	}
-
 	username := string(parts[1])
 	password := string(parts[2])
 
-	err = a.authenticate(username, password)
+	err = a.authenticate(identity, username, password)
+	done = true
 	return
 }
 
+// A server implementation of the PLAIN authentication mechanism, as described
+// in RFC 4616.
 func NewPlainServer(authenticator PlainAuthenticator) Server {
 	return &plainServer{authenticate: authenticator}
 }
