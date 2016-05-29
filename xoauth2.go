@@ -16,7 +16,9 @@ func (a *xoauth2Client) Start() (mech string, ir []byte, err error) {
 }
 
 func (a *xoauth2Client) Next(challenge []byte) (response []byte, err error) {
-	return nil, errors.New("unexpected server challenge")
+	// Server sent an error response
+	// TODO: decode JSON from challenge
+	return []byte{}, errors.New("Authentication error: " + string(challenge))
 }
 
 // An implementation of the XOAUTH2 authentication mechanism, as
