@@ -62,7 +62,7 @@ func TestNewPlainServer(t *testing.T) {
 		t.Fatal("Authentication not finished after sending PLAIN credentials")
 	}
 	if len(challenge) > 0 {
-		t.Error("Invalid non-empty initial challenge:", challenge)
+		t.Error("Invalid non-empty final challenge:", challenge)
 	}
 
 	if !authenticated {
