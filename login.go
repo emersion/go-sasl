@@ -4,6 +4,9 @@ import (
 	"errors"
 )
 
+// The LOGIN mechanism name.
+const Login = "LOGIN"
+
 // Authenticates users with an username and a password.
 type LoginAuthenticator func(username, password string) error
 

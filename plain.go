@@ -5,6 +5,9 @@ import (
 	"errors"
 )
 
+// The PLAIN mechanism name.
+const Plain = "PLAIN"
+
 type plainClient struct {
 	Identity string
 	Username string
