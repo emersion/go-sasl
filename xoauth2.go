@@ -4,13 +4,16 @@ import (
 	"errors"
 )
 
+// The XOAUTH2 mechanism name.
+const Xoauth2 = "XOAUTH2"
+
 type xoauth2Client struct {
 	Username string
 	Token string
 }
 
 func (a *xoauth2Client) Start() (mech string, ir []byte, err error) {
-	mech = "XOAUTH2"
+	mech = Xoauth2
 	ir = []byte("user=" + a.Username + "\x01auth=Bearer " + a.Token + "\x01\x01")
 	return
 }

@@ -4,12 +4,15 @@ import (
 	"errors"
 )
 
+// The EXTERNAL mechanism name.
+const External = "EXTERNAL"
+
 type externalClient struct {
 	Identity string
 }
 
 func (a *externalClient) Start() (mech string, ir []byte, err error) {
-	mech = "EXTERNAL"
+	mech = External
 	ir = []byte(a.Identity)
 	return
 }
