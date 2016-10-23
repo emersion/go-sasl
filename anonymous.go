@@ -1,9 +1,5 @@
 package sasl
 
-import (
-	"errors"
-)
-
 // The ANONYMOUS mechanism name.
 const Anonymous = "ANONYMOUS"
 
@@ -18,7 +14,7 @@ func (c *anonymousClient) Start() (mech string, ir []byte, err error) {
 }
 
 func (c *anonymousClient) Next(challenge []byte) (response []byte, err error) {
-	return nil, errors.New("Unexpected server challenge")
+	return nil, ErrUnexpectedServerChallenge
 }
 
 // A client implementation of the ANONYMOUS authentication mechanism, as
@@ -37,7 +33,7 @@ type anonymousServer struct {
 
 func (s *anonymousServer) Next(response []byte) (challenge []byte, done bool, err error) {
 	if s.done {
-		err = errors.New("Unexpected client response")
+		err = ErrUnexpectedClientResponse
 		return
 	}
 

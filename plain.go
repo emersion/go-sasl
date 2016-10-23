@@ -21,7 +21,7 @@ func (a *plainClient) Start() (mech string, ir []byte, err error) {
 }
 
 func (a *plainClient) Next(challenge []byte) (response []byte, err error) {
-	return nil, errors.New("Unexpected server challenge")
+	return nil, ErrUnexpectedServerChallenge
 }
 
 // A client implementation of the PLAIN authentication mechanism, as described
@@ -44,7 +44,7 @@ type plainServer struct {
 
 func (a *plainServer) Next(response []byte) (challenge []byte, done bool, err error) {
 	if a.done {
-		err = errors.New("Unexpected client response")
+		err = ErrUnexpectedClientResponse
 		return
 	}
 

@@ -1,9 +1,5 @@
 package sasl
 
-import (
-	"errors"
-)
-
 // The EXTERNAL mechanism name.
 const External = "EXTERNAL"
 
@@ -18,7 +14,7 @@ func (a *externalClient) Start() (mech string, ir []byte, err error) {
 }
 
 func (a *externalClient) Next(challenge []byte) (response []byte, err error) {
-	return nil, errors.New("unexpected server challenge")
+	return nil, ErrUnexpectedServerChallenge
 }
 
 // An implementation of the EXTERNAL authentication mechanism, as described in

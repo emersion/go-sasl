@@ -6,6 +6,16 @@ package sasl
 //   would be better if Go provided a standard package (e.g. crypto/sasl) that
 //   could be shared by SMTP, IMAP, and other packages.
 
+import (
+	"errors"
+)
+
+// Common SASL errors.
+var (
+	ErrUnexpectedClientResponse = errors.New("sasl: unexpected client response")
+	ErrUnexpectedServerChallenge = errors.New("sasl: unexpected server challenge")
+)
+
 // Client interface to perform challenge-response authentication.
 type Client interface {
 	// Begins SASL authentication with the server. It returns the

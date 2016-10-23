@@ -1,9 +1,5 @@
 package sasl
 
-import (
-	"errors"
-)
-
 // The LOGIN mechanism name.
 const Login = "LOGIN"
 
@@ -43,7 +39,7 @@ func (a *loginServer) Next(response []byte) (challenge []byte, done bool, err er
 		err = a.authenticate(a.username, a.password)
 		done = true
 	default:
-		err = errors.New("Unexpected client response")
+		err = ErrUnexpectedClientResponse
 	}
 
 	a.state++
