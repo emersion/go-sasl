@@ -15,7 +15,7 @@ type plainClient struct {
 }
 
 func (a *plainClient) Start() (mech string, ir []byte, err error) {
-	mech = "PLAIN"
+	mech = Plain
 	ir = []byte(a.Identity + "\x00" + a.Username + "\x00" + a.Password)
 	return
 }
