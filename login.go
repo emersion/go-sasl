@@ -33,11 +33,9 @@ func (a *loginServer) Next(response []byte) (challenge []byte, done bool, err er
 		// Check for initial response field, as per RFC4422 section 3
 		if response == nil {
 			challenge = []byte("Username:")
-		} else {
-			a.username = string(response)
-			challenge = []byte("Password:")
-			a.state++
+			break
 		}
+		fallthrough
 	case loginWaitingUsername:
 		a.username = string(response)
 		challenge = []byte("Password:")
