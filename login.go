@@ -16,9 +16,9 @@ const (
 )
 
 type loginServer struct {
-	state loginState
+	state              loginState
 	username, password string
-	authenticate LoginAuthenticator
+	authenticate       LoginAuthenticator
 }
 
 // A server implementation of the LOGIN authentication mechanism, as described
@@ -30,7 +30,12 @@ func NewLoginServer(authenticator LoginAuthenticator) Server {
 func (a *loginServer) Next(response []byte) (challenge []byte, done bool, err error) {
 	switch a.state {
 	case loginNotStarted:
-		challenge = []byte("Username:")
+		// Check for initial response field, as per RFC4422 section 3
+		if response == nil {
+			challenge = []byte("Username:")
+			break
+		}
+		fallthrough
 	case loginWaitingUsername:
 		a.username = string(response)
 		challenge = []byte("Password:")
