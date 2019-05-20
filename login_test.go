@@ -59,7 +59,8 @@ func TestNewLoginServer(t *testing.T) {
 	}
 
 	// Tests with initial response field, as per RFC4422 section 3
-	s2 := sasl.NewLoginServer(func(username, password string) error {
+	authenticated = false
+	s = sasl.NewLoginServer(func(username, password string) error {
 		if username != "tim" {
 			return errors.New("Invalid username: " + username)
 		}
@@ -71,7 +72,7 @@ func TestNewLoginServer(t *testing.T) {
 		return nil
 	})
 
-	challenge, done, err = s2.Next([]byte("tim"))
+	challenge, done, err = s.Next([]byte("tim"))
 	if err != nil {
 		t.Fatal("Error while sending username:", err)
 	}
@@ -79,10 +80,10 @@ func TestNewLoginServer(t *testing.T) {
 		t.Fatal("Done after sending username")
 	}
 	if string(challenge) != "Password:" {
-		t.Error("Invalid challenge after sending username:", challenge)
+		t.Error("Invalid challenge after sending username:", string(challenge))
 	}
 
-	challenge, done, err = s2.Next([]byte("tanstaaftanstaaf"))
+	challenge, done, err = s.Next([]byte("tanstaaftanstaaf"))
 	if err != nil {
 		t.Fatal("Error while sending password:", err)
 	}
