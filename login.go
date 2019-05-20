@@ -35,6 +35,7 @@ func (a *loginServer) Next(response []byte) (challenge []byte, done bool, err er
 			challenge = []byte("Username:")
 			break
 		}
+		a.state++
 		fallthrough
 	case loginWaitingUsername:
 		a.username = string(response)

@@ -9,7 +9,7 @@ import (
 
 func TestNewLoginServer(t *testing.T) {
 	var authenticated = false
-	s := sasl.NewLoginServer(func (username, password string) error {
+	s := sasl.NewLoginServer(func(username, password string) error {
 		if username != "tim" {
 			return errors.New("Invalid username: " + username)
 		}
@@ -44,6 +44,45 @@ func TestNewLoginServer(t *testing.T) {
 	}
 
 	challenge, done, err = s.Next([]byte("tanstaaftanstaaf"))
+	if err != nil {
+		t.Fatal("Error while sending password:", err)
+	}
+	if !done {
+		t.Fatal("Authentication not finished after sending password")
+	}
+	if len(challenge) > 0 {
+		t.Error("Invalid non-empty final challenge:", challenge)
+	}
+
+	if !authenticated {
+		t.Error("Not authenticated")
+	}
+
+	// Tests with initial response field, as per RFC4422 section 3
+	s2 := sasl.NewLoginServer(func(username, password string) error {
+		if username != "tim" {
+			return errors.New("Invalid username: " + username)
+		}
+		if password != "tanstaaftanstaaf" {
+			return errors.New("Invalid password: " + password)
+		}
+
+		authenticated = true
+		return nil
+	})
+
+	challenge, done, err = s2.Next([]byte("tim"))
+	if err != nil {
+		t.Fatal("Error while sending username:", err)
+	}
+	if done {
+		t.Fatal("Done after sending username")
+	}
+	if string(challenge) != "Password:" {
+		t.Error("Invalid challenge after sending username:", challenge)
+	}
+
+	challenge, done, err = s2.Next([]byte("tanstaaftanstaaf"))
 	if err != nil {
 		t.Fatal("Error while sending password:", err)
 	}
