@@ -23,6 +23,9 @@ type loginServer struct {
 
 // A server implementation of the LOGIN authentication mechanism, as described
 // in https://tools.ietf.org/html/draft-murchison-sasl-login-00.
+//
+// LOGIN is obsolete and should only be enabled for legacy clients that cannot
+// be updated to use PLAIN.
 func NewLoginServer(authenticator LoginAuthenticator) Server {
 	return &loginServer{authenticate: authenticator}
 }
