@@ -33,10 +33,17 @@ type oauthBearerClient struct {
 
 func (a *oauthBearerClient) Start() (mech string, ir []byte, err error) {
 	mech = OAuthBearer
-	ir = []byte("n,a=" + a.Username +
-		",\x01host=" + a.Host +
-		"\x01port=" + strconv.Itoa(a.Port) +
-		"\x01auth=Bearer " + a.Token + "\x01\x01")
+	var str = "n,a=" + a.Username + ","
+
+	if a.Host != "" {
+		str += "\x01host=" + a.Host
+	}
+
+	if a.Port != 0 {
+		str += "\x01port=" + strconv.Itoa(a.Port)
+	}
+	str += "\x01auth=Bearer " + a.Token + "\x01\x01"
+	ir = []byte(str)
 	return
 }
 
