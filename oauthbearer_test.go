@@ -7,6 +7,31 @@ import (
 	"github.com/emersion/go-sasl"
 )
 
+func TestNewOAuthBearerClientNoHostOrPort(t *testing.T) {
+	c := sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
+		Username: "user@example.com",
+		Token:    "vF9dft4qmTc2Nvb3RlckBhbHRhdmlzdGEuY29tCg==",
+	})
+	mech, ir, err := c.Start()
+	if err != nil {
+		t.Fatal("Error while starting client:", err)
+	}
+	if mech != "OAUTHBEARER" {
+		t.Error("Invalid mechanism name:", mech)
+	}
+	expected := []byte{110, 44, 97, 61, 117, 115, 101, 114,
+		64, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111,
+		109, 44, 1,
+		97, 117, 116, 104, 61, 66, 101, 97, 114, 101,
+		114, 32, 118, 70, 57, 100, 102, 116, 52, 113, 109,
+		84, 99, 50, 78, 118, 98, 51, 82, 108, 99, 107, 66,
+		104, 98, 72, 82, 104, 100, 109, 108, 122, 100, 71,
+		69, 117, 89, 50, 57, 116, 67, 103, 61, 61, 1, 1}
+	if bytes.Compare(ir, expected) != 0 {
+		t.Error("Invalid initial response:", ir)
+	}
+}
+
 func TestNewOAuthBearerClient(t *testing.T) {
 	c := sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
 		Username: "user@example.com",
