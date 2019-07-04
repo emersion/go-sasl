@@ -12,7 +12,6 @@ const (
 	loginNotStarted loginState = iota
 	loginWaitingUsername
 	loginWaitingPassword
-	loginCompleted
 )
 
 type loginServer struct {
