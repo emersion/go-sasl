@@ -1,7 +1,36 @@
 package sasl
 
+import (
+	"bytes"
+)
+
 // The LOGIN mechanism name.
 const Login = "LOGIN"
+
+var expectedChallenge = []byte{80, 97, 115, 115, 119, 111, 114, 100, 58}
+
+type loginClient struct {
+	Username string
+	Password string
+}
+
+func (a *loginClient) Start() (mech string, ir []byte, err error) {
+	mech = "LOGIN"
+	ir = []byte(a.Username)
+	return
+}
+
+func (a *loginClient) Next(challenge []byte) (response []byte, err error) {
+	if bytes.Compare(challenge, expectedChallenge) != 0 {
+		return nil, ErrUnexpectedServerChallenge
+	} else {
+		return []byte(a.Password), nil
+	}
+}
+
+func NewLoginClient(username, password string) Client {
+	return &loginClient{username, password}
+}
 
 // Authenticates users with an username and a password.
 type LoginAuthenticator func(username, password string) error
