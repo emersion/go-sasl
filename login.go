@@ -7,7 +7,7 @@ import (
 // The LOGIN mechanism name.
 const Login = "LOGIN"
 
-var expectedChallenge = []byte{80, 97, 115, 115, 119, 111, 114, 100, 58}
+var expectedChallenge = []byte("Password:")
 
 type loginClient struct {
 	Username string
@@ -34,6 +34,7 @@ func (a *loginClient) Next(challenge []byte) (response []byte, err error) {
 //
 // This mechanism is used by Microsoft Exchange SMTP servers. It is considered
 // obsolete, and should not be used when other mechanisms are available.
+// For plaintext password authentication, the standard mechanism is PLAIN".
 func NewLoginClient(username, password string) Client {
 	return &loginClient{username, password}
 }
