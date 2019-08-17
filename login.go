@@ -29,12 +29,10 @@ func (a *loginClient) Next(challenge []byte) (response []byte, err error) {
 }
 
 // A client implementation of the LOGIN authentication mechanism for SMTP,
-// as described in
-// https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-xlogin/
+// as described in http://www.iana.org/go/draft-murchison-sasl-login
 //
-// This mechanism is used by Microsoft Exchange SMTP servers. It is considered
-// obsolete, and should not be used when other mechanisms are available.
-// For plaintext password authentication, the standard mechanism is PLAIN".
+// It is considered obsolete, and should not be used when other mechanisms are
+// available. For plaintext password authentication use PLAIN mechanism.
 func NewLoginClient(username, password string) Client {
 	return &loginClient{username, password}
 }
