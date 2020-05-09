@@ -69,36 +69,43 @@ type OAuthBearerAuthenticator func(opts OAuthBearerOptions) *OAuthBearerError
 
 type oauthBearerServer struct {
 	done         bool
-	fail         error
+	failErr      error
 	authenticate OAuthBearerAuthenticator
+}
+
+func (a *oauthBearerServer) fail(descr string) ([]byte, bool, error) {
+	blob, err := json.Marshal(OAuthBearerError{
+		Status:  "invalid_request",
+		Schemes: "bearer",
+	})
+	if err != nil {
+		panic(err) // wtf
+	}
+	a.failErr = errors.New(descr)
+	return blob, false, nil
 }
 
 func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, err error) {
 	// Per RFC, we cannot just send an error, we need to return JSON-structured
 	// value as a challenge and then after getting dummy response from the
 	// client stop the exchange.
-	if a.fail != nil {
+	if a.failErr != nil {
+		// Server libraries (go-smtp, go-imap) will not call Next on
+		// protocol-specific SASL cancel response ('*'). However, GS2 (and
+		// indirectly OAUTHBEARER) defines a protocol-independent way to do so
+		// using 0x01.
 		if len(response) != 1 && response[0] != 0x01 {
 			return nil, true, errors.New("unexpected response")
 		}
-		return nil, true, a.fail
-	}
-	fail := func(descr string) ([]byte, bool, error) {
-		blob, err := json.Marshal(OAuthBearerError{
-			Status:  "invalid_request",
-			Schemes: "bearer",
-		})
-		if err != nil {
-			panic(err) // wtf
-		}
-		a.fail = errors.New(descr)
-		return blob, false, nil
+		return nil, true, a.failErr
 	}
 
 	if a.done {
 		err = ErrUnexpectedClientResponse
 		return
 	}
+
+	// Generate empty challenge.
 	if response == nil {
 		return []byte{}, false, nil
 	}
@@ -112,14 +119,14 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 	//   \x01host=...\x01auth=...\x01\x01
 	parts := bytes.SplitN(response, []byte{','}, 3)
 	if len(parts) != 3 {
-		return fail("Invalid response")
+		return a.fail("Invalid response")
 	}
 	if !bytes.Equal(parts[0], []byte{'n'}) {
-		return fail("Invalid response, missing 'n'")
+		return a.fail("Invalid response, missing 'n'")
 	}
 	opts := OAuthBearerOptions{}
 	if !bytes.HasPrefix(parts[1], []byte("a=")) {
-		return fail("Invalid response, missing 'a'")
+		return a.fail("Invalid response, missing 'a'")
 	}
 	opts.Username = string(bytes.TrimPrefix(parts[1], []byte("a=")))
 
@@ -141,7 +148,7 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 
 		pParts := bytes.SplitN(p, []byte{'='}, 2)
 		if len(pParts) != 2 {
-			return fail("Invalid response, missing '='")
+			return a.fail("Invalid response, missing '='")
 		}
 
 		switch string(pParts[0]) {
@@ -150,19 +157,19 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 		case "port":
 			port, err := strconv.ParseUint(string(pParts[1]), 10, 16)
 			if err != nil {
-				return fail("Invalid response, malformed 'port' value")
+				return a.fail("Invalid response, malformed 'port' value")
 			}
 			opts.Port = int(port)
 		case "auth":
 			const prefix = "bearer "
 			strValue := string(pParts[1])
-
+			// Token type is case-insensitive.
 			if !strings.HasPrefix(strings.ToLower(strValue), prefix) {
-				return fail("Unsupported token type")
+				return a.fail("Unsupported token type")
 			}
 			opts.Token = strValue[len(prefix):]
 		default:
-			return fail("Invalid response, unknown parameter: " + string(pParts[0]))
+			return a.fail("Invalid response, unknown parameter: " + string(pParts[0]))
 		}
 	}
 
@@ -172,7 +179,7 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 		if err != nil {
 			panic(err) // wtf
 		}
-		a.fail = authzErr
+		a.failErr = authzErr
 		return blob, false, nil
 	}
 
