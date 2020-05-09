@@ -75,3 +75,70 @@ func TestNewOAuthBearerClient(t *testing.T) {
 	}
 
 }
+
+func TestOAuthBearerServerAndClient(t *testing.T) {
+	oauthErr := sasl.OAuthBearerError{
+		Status:  "invalid_token",
+		Scope:   "email",
+		Schemes: "bearer",
+	}
+	authenticator := func(opts sasl.OAuthBearerOptions) *sasl.OAuthBearerError {
+		if opts.Username == "fxcp" && opts.Token == "VkIvciKi9ijpiKNWrQmYCJrzgd9QYCMB" {
+			return nil
+		}
+		return &oauthErr
+	}
+
+	t.Run("valid token", func(t *testing.T) {
+		s := sasl.NewOAuthBearerServer(authenticator)
+		c := sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
+			Username: "fxcp",
+			Token:    "VkIvciKi9ijpiKNWrQmYCJrzgd9QYCMB",
+		})
+		_, ir, err := c.Start()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, done, err := s.Next(ir)
+		if err != nil {
+			t.Fatal("Unexpected error")
+		}
+		if !done {
+			t.Fatal("Exchange is not complete")
+		}
+	})
+
+	t.Run("invalid token", func(t *testing.T) {
+		s := sasl.NewOAuthBearerServer(authenticator)
+		c := sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
+			Username: "fxcp",
+			Token:    "adiffrentone",
+		})
+		_, ir, err := c.Start()
+		if err != nil {
+			t.Fatal(err)
+		}
+		val, done, err := s.Next(ir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if done {
+			t.Fatal("Exchange is marked complete")
+		}
+
+		_, err = c.Next(val)
+		if err == nil {
+			t.Fatal("Expected an error")
+		}
+		authzErr, ok := err.(*sasl.OAuthBearerError)
+		if !ok {
+			t.Fatal("Not OAuthBearerError")
+		}
+		if authzErr.Status != "invalid_token" {
+			t.Fatal("Wrong status:", authzErr.Status)
+		}
+		if authzErr.Scope != "email" {
+			t.Fatal("Wrong scope:", authzErr.Scope)
+		}
+	})
+}
