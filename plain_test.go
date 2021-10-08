@@ -27,7 +27,7 @@ func TestNewPlainClient(t *testing.T) {
 
 func TestNewPlainServer(t *testing.T) {
 	var authenticated = false
-	s := sasl.NewPlainServer(func (identity, username, password string) error {
+	s := sasl.NewPlainServer(func(identity, username, password string) error {
 		if username != "username" {
 			return errors.New("Invalid username: " + username)
 		}
