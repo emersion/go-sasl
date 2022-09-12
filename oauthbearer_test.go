@@ -141,4 +141,28 @@ func TestOAuthBearerServerAndClient(t *testing.T) {
 			t.Fatal("Wrong scope:", authzErr.Scope)
 		}
 	})
+
+	authenticator = func(opts sasl.OAuthBearerOptions) *sasl.OAuthBearerError {
+		if opts.Username == "" && opts.Token == "VkIvciKi9ijpiKNWrQmYCJrzgd9QYCMB" {
+			return nil
+		}
+		return &oauthErr
+	}
+	t.Run("valid token, no username", func(t *testing.T) {
+		s := sasl.NewOAuthBearerServer(authenticator)
+		c := sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
+			Token: "VkIvciKi9ijpiKNWrQmYCJrzgd9QYCMB",
+		})
+		_, ir, err := c.Start()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, done, err := s.Next(ir)
+		if err != nil {
+			t.Fatal("Unexpected error")
+		}
+		if !done {
+			t.Fatal("Exchange is not complete")
+		}
+	})
 }

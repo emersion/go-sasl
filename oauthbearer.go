@@ -35,8 +35,11 @@ type oauthBearerClient struct {
 }
 
 func (a *oauthBearerClient) Start() (mech string, ir []byte, err error) {
-	mech = OAuthBearer
-	var str = "n,a=" + a.Username + ","
+	var authzid string
+	if a.Username != "" {
+		authzid = "a=" + a.Username
+	}
+	str := "n," + authzid + ","
 
 	if a.Host != "" {
 		str += "\x01host=" + a.Host
@@ -47,7 +50,7 @@ func (a *oauthBearerClient) Start() (mech string, ir []byte, err error) {
 	}
 	str += "\x01auth=Bearer " + a.Token + "\x01\x01"
 	ir = []byte(str)
-	return
+	return OAuthBearer, ir, nil
 }
 
 func (a *oauthBearerClient) Next(challenge []byte) ([]byte, error) {
@@ -121,14 +124,18 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 	if len(parts) != 3 {
 		return a.fail("Invalid response")
 	}
-	if !bytes.Equal(parts[0], []byte{'n'}) {
-		return a.fail("Invalid response, missing 'n'")
+	flag := parts[0]
+	authzid := parts[1]
+	if !bytes.Equal(flag, []byte{'n'}) {
+		return a.fail("Invalid response, missing 'n' in gs2-cb-flag")
 	}
 	opts := OAuthBearerOptions{}
-	if !bytes.HasPrefix(parts[1], []byte("a=")) {
-		return a.fail("Invalid response, missing 'a'")
+	if len(authzid) > 0 {
+		if !bytes.HasPrefix(authzid, []byte("a=")) {
+			return a.fail("Invalid response, missing 'a=' in gs2-authzid")
+		}
+		opts.Username = string(bytes.TrimPrefix(authzid, []byte("a=")))
 	}
-	opts.Username = string(bytes.TrimPrefix(parts[1], []byte("a=")))
 
 	// Cut \x01host=...\x01auth=...\x01\x01
 	// into
