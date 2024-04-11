@@ -37,11 +37,6 @@ func (s *anonymousServer) Next(response []byte) (challenge []byte, done bool, er
 		return
 	}
 
-	// No initial response, send an empty challenge
-	if response == nil {
-		return []byte{}, false, nil
-	}
-
 	s.done = true
 
 	err = s.authenticate(string(response))
