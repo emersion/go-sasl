@@ -1,6 +1,6 @@
 # go-sasl
 
-[![godocs.io](https://godocs.io/github.com/emersion/go-sasl?status.svg)](https://godocs.io/github.com/emersion/go-sasl)
+[![Go Reference](https://pkg.go.dev/badge/github.com/emersion/go-sasl.svg)](https://pkg.go.dev/github.com/emersion/go-sasl)
 
 A [SASL](https://tools.ietf.org/html/rfc4422) library written in Go.
 
